@@ -27,47 +27,50 @@ inicio:
 	LDI		R16,0B11000000
 	OUT		PORTD,R16
 	OUT		DDRD,R16
+	LDI		CONT, 9
 	ret
 
-
-delay_1s:	push r16
-			push r17
-			push r18
-
-			ldi r18,82
-ciclo0:		ldi r17,255
-ciclo1:		ldi r16,255
-ciclo2:		dec r16
-			brne ciclo2
-			dec r17
-			brne ciclo1
-			dec r18
-			brne ciclo0
-
-			pop r18
-			pop r17
-			pop r16
-			ret
+delay_1s:
+	push r16
+	push r17
+	push r18
+	ldi r18,82
+ciclo0:
+	ldi r17,255
+ciclo1:
+	ldi r16,255
+ciclo2:
+	dec r16
+	brne ciclo2
+	dec r17
+	brne ciclo1
+	dec r18
+	brne ciclo0
+	pop r18
+	pop r17
+	pop r16
+	ret
 			
-			
-delay_2ms:	push r16
-			push r17
-			push r18
-
-			ldi r18,16
-ciclo3:		ldi r17,25
-ciclo4:		ldi r16,25
-ciclo5:		dec r16
-			brne ciclo2
-			dec r17
-			brne ciclo1
-			dec r18
-			brne ciclo0
-
-			pop r18
-			pop r17
-			pop r16
-			ret  
+delay_2ms:
+	push r16
+	push r17
+	push r18
+	ldi r18,16
+ciclo3:
+	ldi r17,25
+ciclo4:
+	ldi r16,25
+ciclo5:
+	dec r16
+	brne ciclo2
+	dec r17
+	brne ciclo1
+	dec r18
+	brne ciclo0
+	pop r18
+	pop r17
+	pop r16
+	ret  
 
 main:
 	ldi r16,0xff
@@ -76,13 +79,12 @@ main:
 	out sph,r16
 	call inicio
 
-
 LER:
-	SBIS PIND, S ;S
+	SBIS PIND, S
 	JMP S_ON
-	SBIS PIND, NI ;NI
+	SBIS PIND, NI
 	JMP NI_ON
-	SBIS PIND, ND ; ND
+	SBIS PIND, ND
 	JMP ND_ON
 	JMP LER
 
@@ -106,19 +108,107 @@ SP_ON:
 	OUT PORTA, LEDX
 	call delay_1s
 	DEC CONT
+	CPI CONT, 0
+	BREQ cont_zero
+	JMP S_ON
 
+cont_zero:
+	CALL Display
+	JMP LER
 
 ND_ON:
 	call delay_2ms
 	SBIC PIND, ND
 	jmp LER
+	DEC CONT
+	CPI CONT, 0
+	BRNE mostra_display
+	LDI CONT, 1
+mostra_display:
+	CALL Display
+	JMP LER
 
 NI_ON:
 	call delay_2ms
 	SBIC PIND, NI
 	jmp LER
-
+	INC CONT
+	CPI CONT, 10
+	BRNE mostra_display_ni
+	LDI CONT, 9
+mostra_display_ni:
+	CALL Display
+	JMP LER
 
 Display:
-	; para cada valor do cont equivale a um numero do display
-	; utilizae DEC e INC para o cont
+    CPI     CONT, 0
+    BREQ    show_1
+    CPI     CONT, 1
+    BREQ    show_1
+    CPI     CONT, 2
+    BREQ    show_2
+    CPI     CONT, 3
+    BREQ    show_3
+    CPI     CONT, 4
+    BREQ    show_4
+    CPI     CONT, 5
+    BREQ    show_5
+    CPI     CONT, 6
+    BREQ    show_6
+    CPI     CONT, 7
+    BREQ    show_7
+    CPI     CONT, 8
+    BREQ    show_8
+    CPI     CONT, 9
+    BREQ    show_9
+    JMP     show_9
+
+show_0: 
+    LDI R16, 0xC0
+    OUT PORTA, R16
+    RET
+
+show_1: 
+    LDI R16, 0xF9
+    OUT PORTA, R16
+    RET
+
+show_2: 
+    LDI R16, 0xA4
+    OUT PORTA, R16
+    RET
+
+show_3: 
+    LDI R16, 0xB0
+    OUT PORTA, R16
+    RET
+
+show_4: 
+    LDI R16, 0x99
+    OUT PORTA, R16
+    RET
+
+show_5: 
+    LDI R16, 0x92
+    OUT PORTA, R16
+    RET
+
+show_6: 
+    LDI R16, 0x82
+    OUT PORTA, R16
+    RET
+
+show_7: 
+    LDI R16, 0xF8
+    OUT PORTA, R16
+    RET
+
+show_8: 
+    LDI R16, 0x80
+    OUT PORTA, R16
+    RET
+
+show_9: 
+    LDI R16, 0x90
+    OUT PORTA, R16
+    RET
