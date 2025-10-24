@@ -57,16 +57,16 @@ delay_2ms:
 	push r18
 	ldi r18,16
 ciclo3:
-	ldi r17,25
+	ldi r17,100
 ciclo4:
-	ldi r16,25
+	ldi r16,100
 ciclo5:
 	dec r16
-	brne ciclo2
+	brne ciclo5
 	dec r17
-	brne ciclo1
+	brne ciclo4
 	dec r18
-	brne ciclo0
+	brne ciclo3
 	pop r18
 	pop r17
 	pop r16
@@ -92,6 +92,7 @@ S_ON:
 	call delay_2ms
 	SBIC PIND, S
 	jmp LER
+MOTOR:
 	LDI LEDX,0b01111111
 	OUT PORTA, LEDX
 
@@ -108,9 +109,10 @@ SP_ON:
 	OUT PORTA, LEDX
 	call delay_1s
 	DEC CONT
+	CALL Display
 	CPI CONT, 0
 	BREQ cont_zero
-	JMP S_ON
+	JMP MOTOR
 
 cont_zero:
 	CALL Display
@@ -126,7 +128,11 @@ ND_ON:
 	LDI CONT, 1
 mostra_display:
 	CALL Display
-	JMP LER
+esperar_nd:
+	SBIC PIND, ND
+	jmp LER
+	jmp esperar_nd
+
 
 NI_ON:
 	call delay_2ms
@@ -138,7 +144,10 @@ NI_ON:
 	LDI CONT, 9
 mostra_display_ni:
 	CALL Display
-	JMP LER
+esperar_ni:
+	SBIC PIND, NI
+	jmp LER
+	jmp esperar_ni
 
 Display:
     CPI     CONT, 0
@@ -163,52 +172,48 @@ Display:
     BREQ    show_9
     JMP     show_9
 
-show_0: 
-    LDI R16, 0xC0
-    OUT PORTA, R16
-    RET
 
 show_1: 
     LDI R16, 0xF9
-    OUT PORTA, R16
+    OUT PORTC, R16
     RET
 
 show_2: 
     LDI R16, 0xA4
-    OUT PORTA, R16
+    OUT PORTC, R16
     RET
 
 show_3: 
     LDI R16, 0xB0
-    OUT PORTA, R16
+    OUT PORTC, R16
     RET
 
 show_4: 
     LDI R16, 0x99
-    OUT PORTA, R16
+    OUT PORTC, R16
     RET
 
 show_5: 
     LDI R16, 0x92
-    OUT PORTA, R16
+    OUT PORTC, R16
     RET
 
 show_6: 
     LDI R16, 0x82
-    OUT PORTA, R16
+    OUT PORTC, R16
     RET
 
 show_7: 
     LDI R16, 0xF8
-    OUT PORTA, R16
+    OUT PORTC, R16
     RET
 
 show_8: 
     LDI R16, 0x80
-    OUT PORTA, R16
+    OUT PORTC, R16
     RET
 
 show_9: 
     LDI R16, 0x90
-    OUT PORTA, R16
+    OUT PORTC, R16
     RET
