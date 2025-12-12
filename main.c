@@ -1,16 +1,12 @@
 #include <avr/interrupt.h>
-#include <avr/io.h>
-#include <util/delay.h>
 
-volatile unsigned char cont_botoes = 100;
+
+volatile unsigned char cont_botoes;
 const unsigned char tabela[] = {0XC0, 0XF9, 0XA4, 0XB0, 0X99, 0X92, 0x82, 0XF8, 0x80, 0x90, 0xFF, 0xBF};
 unsigned char vect_display[4] = {10, 10, 10, 10};
 unsigned char p_display = 0;
 unsigned char pwm = 0;
-char sentido = 1;
-volatile unsigned char crg = 0;
-volatile unsigned char tempo_espera = 0;
-unsigned char velocidade_antes_parar = 0;
+signed char sentido = 1;
 
 void inicio(void)
 {
@@ -41,48 +37,24 @@ ISR(TIMER0_COMP_vect)
 {
 	display();
 	cont_botoes--;
-	if(cont_botoes == 0)
-	{
-		cont_botoes = 100;
-		crg = 1;
-	}
-	
-	if(tempo_espera > 0)
-	{
-		tempo_espera--;
-		if(tempo_espera == 0)
-		{
-			sentido = -sentido;
-			pwm = velocidade_antes_parar;
-			OCR2 = (pwm * 255) / 100;
-			
-			if(sentido == 1)
-			PORTB = (PORTB & 0b10011111) | 0b00100000;
-			else
-			PORTB = (PORTB & 0b10011111) | 0b01000000;
-		}
-	}
 }
 
 void processar_display(void)
 {
-	if(pwm >= 100)
+	vect_display[0] = 10;
+	
+	if(sentido == -1)
+	vect_display[1] = 11;
+	else
+	vect_display[1] = 10;
+	
+	if(pwm == 100)
 	{
-		vect_display[0] = 10;
-		if(sentido == -1 && pwm > 0)
-		vect_display[1] = 11;
-		else
-		vect_display[1] = 10;
 		vect_display[2] = 9;
 		vect_display[3] = 9;
 	}
 	else
 	{
-		vect_display[0] = 10;
-		if(sentido == -1 && pwm > 0)
-		vect_display[1] = 11;
-		else
-		vect_display[1] = 10;
 		vect_display[2] = pwm / 10;
 		vect_display[3] = pwm % 10;
 	}
@@ -92,26 +64,21 @@ void processar_sw(void)
 {
 	if((PINA & 0b00000001) == 0)
 	{
-		if(crg == 1)
+		cont_botoes=1;
+		while(cont_botoes!=0);
+		if((PINA & 0b00000001) == 0)
 		{
-			if(pwm < 95)
-			pwm = pwm + 5;
-			else
-			pwm = 100;
-			crg = 0;
+			if(pwm+5<=100)
+				pwm = pwm + 5;		
+		while((PINA & 0b00000001) == 0);
 		}
 	}
 	
 	if((PINA & 0b00000010) == 0)
-	{
-		if(crg == 1)
-		{
-			if(pwm > 5)
+	{	
+		if(pwm-5>=0)
 			pwm = pwm - 5;
-			else
-			pwm = 0;
-			crg = 0;
-		}
+		while((PINA & 0b00000010) == 0);
 	}
 	
 	if((PINA & 0b00000100) == 0)
@@ -126,49 +93,35 @@ void processar_sw(void)
 	
 	if((PINA & 0b00010000) == 0)
 	{
-		if(pwm > 0 && tempo_espera == 0)
+		cont_botoes=1;
+		while(cont_botoes!=0);
+		if((PINA & 0b00010000) == 0)
 		{
-			velocidade_antes_parar = pwm;
-			OCR2 = 0;
-			tempo_espera = 50;
+			sentido=-sentido;
+			OCR2=0;
+			cont_botoes=50;
+			while(cont_botoes!=0);
+			if(sentido == 1)
+			PORTB = (PORTB & 0b10011111) | 0b00100000;
+			else
+			PORTB = (PORTB & 0b10011111) | 0b01000000;
 		}
+		
+		
+		while((PINA & 0b00010000) == 0);	
 	}
 	
 	if((PINA & 0b00100000) == 0)
 	{
 		pwm = 0;
-		tempo_espera = 0;
 	}
 	
-	if(pwm > 100)
-	pwm = 100;
-	
-	if(tempo_espera == 0)
 	OCR2 = (pwm * 255) / 100;
 }
 
 int main(void)
 {
 	inicio();
-	
-	
-	vect_display[0] = 11;
-	vect_display[1] = 11;
-	vect_display[2] = 11;
-	vect_display[3] = 11;
-	
-	
-	for(unsigned int i = 0; i < 200; i++)
-	{
-		_delay_ms(5);
-	}
-	
-
-	vect_display[0] = 10;
-	vect_display[1] = 10;
-	vect_display[2] = 10;
-	vect_display[3] = 10;
-	
 	while(1)
 	{
 		processar_sw();
