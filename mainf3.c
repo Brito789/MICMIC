@@ -209,9 +209,30 @@ void processar_rx(void)
 
 }
 
-void processar_adc(void)        //novo
+int ler_ADC(void)						//novo, n sei se esta bem
 {
+	unsigned char lerH;
+	
+	ADCSRA |= (1 << ADSC);
+	
+	while ((ADCSRA & (1 << ADSC)) != 0);
 
+	lerH = ADCH;
+	
+	return lerH;
+}
+void processar_adc(void)       			 //novo, n sei se esta bem
+{
+	unsigned int soma = 0;
+	
+	for(int i = 0; i < 4; i++)
+	{
+		soma += ler_ADC();
+		_delay_ms(10);
+	}
+	
+	OCR2 = soma/4;
+	OCR2 = (pwm * 255) / 100;
 }
 
 int main(void)
@@ -242,9 +263,9 @@ int main(void)
         modo_funcionamento=2;
 		sprintf(buffer, "Modo Analógico \n\r");
 		enviar_Buffer();
-		vect_display[0]=12                                          //12?
+		vect_display[0]=12                                          
 		flag_Rx=0;
-        }                                                           //
+        }                                                           
 		if(modo_funcionamento==0 && flag_Rx ==1)
 			{
 					processar_rx();
@@ -254,10 +275,11 @@ int main(void)
 		{
 			processar_sw();	
 		}
-		if(modo_funcionamento==2)               //novo
+		if(modo_funcionamento==2)               //novo, n sei se esta bem
         {
             processar_adc();
         }	
 	}
 
 }
+
