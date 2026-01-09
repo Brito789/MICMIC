@@ -9,7 +9,7 @@ unsigned char p_display = 0;
 unsigned char pwm = 0;
 signed char sentido = 1;
 volatile unsigned char flag_Rx, caracter;
-unsigned char modo_funcionamento = 0; 
+unsigned char modo_funcionamento = 0;
 
 void inicio(void)
 {
@@ -102,9 +102,14 @@ void processar_sw(void)
 	
 	if((PINA & 0b00000010) == 0)
 	{
-		if(pwm-5>=0)
-		pwm = pwm - 5;
-		while((PINA & 0b00000010) == 0);
+		cont_botoes=1;
+		while(cont_botoes!=0);
+		if((PINA & 0b00000010) == 0)
+		{
+			if(pwm-5>=0)
+			pwm = pwm - 5;
+			while((PINA & 0b00000010) == 0);
+		}
 	}
 	
 	if((PINA & 0b00000100) == 0)
@@ -155,7 +160,7 @@ void processar_rx(void)
 		sprintf(buffer,"Motor parado \n\r");
 		enviar_Buffer();
 		break;
-	
+		
 		case 'I':
 		case 'i':
 		sentido=-sentido;
@@ -167,26 +172,26 @@ void processar_rx(void)
 		else
 		PORTB = (PORTB & 0b10011111) | 0b01000000;
 		break;
-	
+		
 		case '1':
 		pwm = 25;
 		sprintf(buffer,"Velocidade definida para 25 \n\r");
 		enviar_Buffer();
 		break;
-	
+		
 		case '2':
 		pwm=50;
 		sprintf(buffer,"Velocidade definida para 50 \n\r");
 		enviar_Buffer();
 		break;
-	
+		
 		case '+':
 		if(pwm+5<=100)
 		pwm = pwm + 5;
 		sprintf(buffer,"Velocidade aumentada para %d%% \n\r", pwm);
 		enviar_Buffer();
 		break;
-	
+		
 		case '-':
 		if(pwm-5>=0)
 		pwm = pwm - 5;
@@ -213,31 +218,31 @@ int main(void)
 		if(flag_Rx==1 &&(caracter=='d' || caracter=='D'))
 		{
 			
-		modo_funcionamento=0;
-		sprintf(buffer, "Modo Digital \n\r");
-		enviar_Buffer();
-		vect_display[0]=0;
-		flag_Rx=0;
+			modo_funcionamento=0;
+			sprintf(buffer, "Modo Digital \n\r");
+			enviar_Buffer();
+			vect_display[0]=0;
+			flag_Rx=0;
 		}
 		if(flag_Rx==1 &&(caracter=='s' || caracter=='S'))
 		{
-		modo_funcionamento=1;
-		sprintf(buffer, "Modo Switch \n\r");
-		enviar_Buffer();
-		vect_display[0]=5;
-		flag_Rx=0;
+			modo_funcionamento=1;
+			sprintf(buffer, "Modo Switch \n\r");
+			enviar_Buffer();
+			vect_display[0]=5;
+			flag_Rx=0;
 		}
 		
 		if(modo_funcionamento==0 && flag_Rx ==1)
-			{
-					processar_rx();
-					flag_Rx = 0;
-			}
+		{
+			processar_rx();
+			flag_Rx = 0;
+		}
 		if(modo_funcionamento==1)
 		{
-			processar_sw();	
+			processar_sw();
 		}
-			
+		
 	}
 
 }
